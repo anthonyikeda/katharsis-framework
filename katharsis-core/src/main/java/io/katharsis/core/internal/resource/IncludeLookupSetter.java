@@ -105,21 +105,9 @@ public class IncludeLookupSetter {
 
 		Set<ResourceField> relationshipFields = util.getRelationshipFields(resourceList);
 		for (ResourceField resourceField : relationshipFields) {
-
-			Collection<Resource> unpopulatedResourceList = populatedCache.filterProcessed(resourceList, resourceField);
-			if (unpopulatedResourceList.isEmpty()) {
-				// avoid cyclic/loops during population
-				continue;
-			}
-
 			fieldPath.add(resourceField);
 
 			ResourceInformation resourceInformation = resourceField.getParentResourceInformation();
-
-			// only handle resources from the proper subtype where the
-			// relationship is desired to be loaded
-			List<Resource> resourcesByType = util.filterByType(unpopulatedResourceList, resourceInformation);
-			List<Resource> resourcesWithField = util.filterByLoadedRelationship(resourcesByType, resourceField);
 
 			boolean includeRequested = util.isInclusionRequested(queryAdapter, fieldPath);
 
@@ -127,6 +115,19 @@ public class IncludeLookupSetter {
 			boolean includeRelationshipData = !resourceField.isLazy() || includeResources || additionalEagerLoadedRootRelations.contains(resourceField.getJsonName());
 
 			if (includeRelationshipData) {
+				
+				Collection<Resource> unpopulatedResourceList = populatedCache.filterProcessed(resourceList, resourceField);
+				if (unpopulatedResourceList.isEmpty()) {
+					// avoid cyclic/loops during population
+					continue;
+				}
+
+				// only handle resources from the proper subtype where the
+				// relationship is desired to be loaded
+				List<Resource> resourcesByType = util.filterByType(unpopulatedResourceList, resourceInformation);
+				List<Resource> resourcesWithField = util.filterByLoadedRelationship(resourcesByType, resourceField);
+
+				
 				// lookup resources by inspecting the POJOs in entityMap
 				LookupIncludeBehavior fieldLookupIncludeBehavior = resourceField.getLookupIncludeAutomatically();
 
